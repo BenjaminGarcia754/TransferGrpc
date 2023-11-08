@@ -1,0 +1,21 @@
+{
+  "profiles": {
+    "TransferGrpc": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5053;https://localhost:7092"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "launchUrl": "https://localhost:7092",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5053;https://localhost:7092"
+      },
+      "distributionName": ""
+    }
+  }
+}

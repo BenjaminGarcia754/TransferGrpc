@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+option csharp_namespace = "TransferGrpc.Protos";
+package Media;
+
+message MediaRequest {
+    int32 id = 1;
+    string dataB64 = 2;
+    string name = 3;
+    double size = 4;
+    string fechaSubida = 5;
+    string imagen = 6;
+    string rutaImagen = 7;
+    string ruta = 8;
+    string fechaModificacion = 9;
+    string materia = 10;
+    string valoracion = 11;
+    int32 posicion = 12;
+    bool finalPart = 13; // Mantenemos el campo para indicar la parte final
+}
+
+message MediaSend {
+    string FilePath = 1;
+    bytes videoPart = 2;  // Usamos 'bytes' para transmitir los datos binarios
+    bool finalPart = 3;  // Indica si es la última parte del archivo
+}
+
+message MediaChunck{
+    string dataB64 = 1;
+    int32 chunckPosition = 2;
+}
+
+message ChunckInformation{
+    string route = 1;
+    int32 chunckPosition = 2;
+}
+
+message MediaResponse {
+    bool response = 1;
+    string message = 2;
+}
+
+message IdMedia {
+    string id = 1;
+}
+
+message MessageResponse {
+    bool response = 1;
+    string stringResponse = 2;
+}
+
+message MediaEliminated {
+    string route = 1;
+    string fileType = 2;
+}
+
+message RutaResponse {
+    string stringResponse = 1;
+    bool response = 2;
+    int32 tamanioFile = 3;
+}
+
+message MediaRecovery {
+    string id = 1;
+    int32 posicion = 2;
+};
+
+message Ruta{
+    string ruta = 1;
+};
+
+message ChunckSize{
+    int32 size = 1;
+};
+
+service Media {
+    rpc TransferMedia (MediaRequest) returns (MessageResponse);
+    rpc EliminateMedia (MediaEliminated) returns (MessageResponse);
+    rpc FileExist (Ruta) returns (RutaResponse);
+    rpc RecuperarConexion (MediaRecovery) returns (MessageResponse);
+    // Nuevo servicio SendMedia para transmitir partes del archivo de video.
+    rpc SendMedia (stream MediaSend) returns (MediaResponse);
+    rpc GetMedia (ChunckInformation) returns (MediaChunck);
+    rpc GetSize(Ruta) returns (ChunckSize);
+}
