@@ -15,7 +15,7 @@ namespace TransferGrpc.Services
         public override async Task<MessageResponse> TransferMedia(MediaRequest request, ServerCallContext context)
         {
             MessageResponse response = new MessageResponse();
-            string filePath = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/" + request.Name;
+            string filePath = "rutaBase/" + request.Ruta;
             byte[] buffer = Convert.FromBase64String(request.DataB64);
             string nombre = request.Name;
             try
@@ -24,11 +24,10 @@ namespace TransferGrpc.Services
                 {
                     await fs.WriteAsync(buffer, 0, buffer.Length);
                 }
-                //TODO: Corroborar si es mejor manejar esta parte en otra clase de utilidades
                 
                 if (request.Size == Utilidades.CalcularTamanio(request.Ruta))
                 {
-                    //TODO: Implementar Restfull para registrar archivos
+                    response.FinalPart = true;
                     response.StringResponse = "El archivo se transfirio y se registro con exito";
                 }
                 else
@@ -36,72 +35,16 @@ namespace TransferGrpc.Services
                     response.StringResponse = "Procesando el archivo...";
                 }
                 response.Response = true;
+                response.FinalPart = false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                response.StringResponse = "El no pudo ser transferido con exito";
+                response.StringResponse = "El archivo no pudo ser transferido con exito";
                 response.Response = false;
             }
 
             return response;
-        }
-
-
-        //Mandar archivos al cliente
-        public override async Task<MediaResponse> SendMedia(IAsyncStreamReader<MediaSend> requestStream, ServerCallContext context)
-        {
-            // Obtener la ruta del archivo de video del primer mensaje
-            string filePath = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/elsa.mp4";
-            FileStream fileStream = null;
-            bool firstMessageReceived = false;
-            int totalFileSize = 0;
-
-            byte[] buffer = new byte[4096];
-            while (await requestStream.MoveNext())
-            {
-                var request = requestStream.Current;
-
-                if (!firstMessageReceived)
-                {
-                    filePath = request.FilePath;
-                    fileStream = File.Open(filePath, FileMode.Create, FileAccess.Write);
-                    firstMessageReceived = true;
-
-                    // El primer mensaje contiene el tamaño del archivo
-                    totalFileSize = int.Parse(request.VideoPart.ToStringUtf8());
-                    continue;
-                }
-
-                byte[] videoPartBytes = request.VideoPart.ToByteArray();
-                await fileStream.WriteAsync(videoPartBytes, 0, videoPartBytes.Length);
-                // Guardar o procesar la parte del video en request.VideoPart
-                // Puedes guardarla en un archivo temporal, procesarla, etc.
-
-                // Comprobar si es la última parte del archivo
-                if (request.FinalPart)
-                {
-                    fileStream.Close(); // Cerrar el archivo
-                    break;
-                }
-            }
-
-            if(fileStream != null && fileStream.Length == totalFileSize)
-            {
-                return new MediaResponse
-                {
-                    Response = true,
-                    Message = "El archivo ha sido transferido con exito."
-                };
-            }
-            else
-            {
-                return new MediaResponse
-                {
-                    Response = false,
-                    Message = "El archivo no se transmitio correctamente"
-                };
-            }
         }
 
         //Eliminar archivo
@@ -120,7 +63,7 @@ namespace TransferGrpc.Services
                 {
                     responce.Response = false;
                     responce.StringResponse = "El archivo no pudo ser eliminado";
-                    //logger.LogInformation(ex.Message);
+                    Console.WriteLine(ex.Message);
                 }
             }
             else
@@ -128,7 +71,6 @@ namespace TransferGrpc.Services
                 responce.Response = false;
                 responce.StringResponse = "El archivo solicitado no se encuentra o no esta disponible";
             }
-
             return responce;
         }
 
@@ -153,41 +95,6 @@ namespace TransferGrpc.Services
             return responce;
         }
 
-        //Mandar archivo desde un trozo exacto
-        /*public override Task<MessageResponse> RecuperarConexion(MediaRecovery request, ServerCallContext context)
-        {
-            //TODO: utilizar el REST para obtener el archivo
-            
-            string filePath = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/Elsa.mp4";
-            if (File.Exists(filePath))
-            {
-                byte[] dataFile = File.ReadAllBytes(filePath);
-
-                int offset = 0;
-
-                while (offset < dataFile.Length)
-                {
-                    int length = Math.Min(4096, dataFile.Length - offset);
-                    byte[] buffer = dividirArreglo(dataFile, offset, length);
-                    offset += length;
-
-                    string base64 = Convert.ToBase64String(buffer);
-                    MediaRequest media = new MediaRequest();
-                    media.DataB64 = base64;
-                    media.Name = fileName;
-                    var reply = client.TransferMediaAsync(media);
-                    MessageResponce responce = await reply;
-
-                    if (responce.Responce)
-                        Console.WriteLine(responce.StringResponce);
-                    else
-                        Console.WriteLine(responce.StringResponce);
-                }
-            }
-
-            return null;
-        }*/
-
         public static byte[] dividirArreglo(byte[] arregloReal, int offset, int length)
         {
             byte[] arregloTemporal = new byte[4096];
@@ -195,27 +102,43 @@ namespace TransferGrpc.Services
             return arregloTemporal;
         }
 
+        //Mandar archivo por bloques
         public override async Task<MediaChunck> GetMedia(ChunckInformation request, ServerCallContext context)
         {
-            byte[] mediaBytes = await File.ReadAllBytesAsync(request.Route);
-            int finalSize = mediaBytes.Length;
-            byte[] tempMediaBytes = new byte[4096];
-            int finalPosition = request.ChunckPosition + 4096;
-            int offset = 0;
+            const int chunkSize = 4096;
+            byte[] tempMediaBytes = new byte[chunkSize];
+            int bytesRead;
 
-            for (int i = request.ChunckPosition; i <= finalPosition || i == finalPosition; i++)
+            using (FileStream fileStream = File.OpenRead(request.Route))
             {
-                tempMediaBytes[offset] = mediaBytes[i];
-                offset += 1;
+                fileStream.Position = request.ChunckPosition;
+
+                bytesRead = await fileStream.ReadAsync(tempMediaBytes, 0, chunkSize);
             }
 
-            string dataB64 = Convert.ToBase64String(tempMediaBytes);
-            MediaChunck mediaChunck = new MediaChunck();
-            mediaChunck.ChunckPosition = finalPosition;
-            mediaChunck.DataB64 = dataB64;
-            return mediaChunck;
+            if (bytesRead > 0)
+            {
+                string dataB64 = Convert.ToBase64String(tempMediaBytes, 0, bytesRead);
+
+                MediaChunck mediaChunck = new MediaChunck
+                {
+                    ChunckPosition = request.ChunckPosition + bytesRead,
+                    DataB64 = dataB64
+                };
+
+                return mediaChunck;
+            }
+            else
+            {
+                return new MediaChunck
+                {
+                    ChunckPosition = request.ChunckPosition,
+                    DataB64 = string.Empty
+                };
+            }
         }
 
+        //Obtener el tamaño de un archivo
         public override async Task<ChunckSize> GetSize(Ruta request, ServerCallContext context)
         {
             byte[] mediaArray = await File.ReadAllBytesAsync(request.Ruta_);

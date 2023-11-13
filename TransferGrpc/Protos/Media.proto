@@ -18,6 +18,11 @@ message MediaRequest {
     int32 posicion = 12;
     bool finalPart = 13; // Mantenemos el campo para indicar la parte final
 }
+message MessageResponse {
+    bool response = 1;
+    string stringResponse = 2;
+    bool finalPart = 3;
+}
 
 message MediaSend {
     string FilePath = 1;
@@ -44,10 +49,7 @@ message IdMedia {
     string id = 1;
 }
 
-message MessageResponse {
-    bool response = 1;
-    string stringResponse = 2;
-}
+
 
 message MediaEliminated {
     string route = 1;
@@ -78,7 +80,6 @@ service Media {
     rpc EliminateMedia (MediaEliminated) returns (MessageResponse);
     rpc FileExist (Ruta) returns (RutaResponse);
     rpc RecuperarConexion (MediaRecovery) returns (MessageResponse);
-    // Nuevo servicio SendMedia para transmitir partes del archivo de video.
     rpc SendMedia (stream MediaSend) returns (MediaResponse);
     rpc GetMedia (ChunckInformation) returns (MediaChunck);
     rpc GetSize(Ruta) returns (ChunckSize);
