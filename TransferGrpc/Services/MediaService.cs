@@ -141,10 +141,19 @@ namespace TransferGrpc.Services
         //Obtener el tamaño de un archivo
         public override async Task<ChunckSize> GetSize(Ruta request, ServerCallContext context)
         {
-            byte[] mediaArray = await File.ReadAllBytesAsync(request.Ruta_);
-            int result = mediaArray.Length;
             ChunckSize chunckSize = new ChunckSize();
-            chunckSize.Size = result;
+            Console.WriteLine("En el servidor Get Size");
+            try
+            {
+                byte[] mediaArray = await File.ReadAllBytesAsync(request.Ruta_);
+                int result = mediaArray.Length;
+                chunckSize.Size = result;
+            }
+            catch (Exception)
+            {
+                chunckSize.Size = 0;
+            }
+            
             return chunckSize;
         }
     }

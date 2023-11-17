@@ -9,13 +9,13 @@ namespace ClienteGrpc
     {
         private static async Task Main(string[] args)
         {
-            var channel = GrpcChannel.ForAddress("http://localhost:5053");
+            var channel = GrpcChannel.ForAddress("http://localhost:9090");
             var client = new Media.MediaClient(channel);
             var filePath = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/ElsaRecortado/Elsa.mp4";
             var filePathClient = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/15.mp4";
             byte[] dataFile = File.ReadAllBytes(filePath);
             string fileName = Path.GetFileNameWithoutExtension(filePath);
-            //Console.WriteLine("Tamaño: {0}", dataFile.Length);
+            Console.WriteLine("Tamaño: {0}", dataFile.Length);
             //int offset = 0;
             /*
             var call = client.SendMedia();
@@ -87,9 +87,11 @@ namespace ClienteGrpc
 
             Ruta route = new Ruta();
             route.Ruta_ = filePath;
+            Console.WriteLine("Enviando ruta...");
             var call = client.GetSizeAsync(route);
-
+            Console.WriteLine("Esperando respuesta...");
             var response = await call.ResponseAsync;
+            Console.WriteLine("Respuesta recibida.");
             int size = response.Size;
             int chunkSize = 4096;
             int iterations = (int)Math.Ceiling((double)size / chunkSize);
@@ -101,6 +103,7 @@ namespace ClienteGrpc
             {
                 for (int i = 0; i < iterations; i++)
                 {
+
                     var chunck = new ChunckInformation
                     {
                         Route = filePath,
