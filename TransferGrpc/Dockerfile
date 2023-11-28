@@ -14,6 +14,10 @@ RUN dotnet restore
 COPY . .
 RUN dotnet publish -c Release -o out
 
+COPY ./Bash /init
+CMD chmod +x /init/crear_carpetas.sh
+CMD ./Archivos.sh
+
 #Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /ServidorGrpc

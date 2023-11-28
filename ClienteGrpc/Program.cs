@@ -11,11 +11,11 @@ namespace ClienteGrpc
         {
             var channel = GrpcChannel.ForAddress("http://localhost:9090");
             var client = new Media.MediaClient(channel);
-            var filePath = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/ElsaRecortado/Elsa.mp4";
+            var filePath = "/Media/crear_carpeta.sh";
             var filePathClient = "C:/Users/52228/Downloads/POST#1030/Sunny Emmy/15.mp4";
-            byte[] dataFile = File.ReadAllBytes(filePath);
-            string fileName = Path.GetFileNameWithoutExtension(filePath);
-            Console.WriteLine("Tamaño: {0}", dataFile.Length);
+            //byte[] dataFile = File.ReadAllBytes(filePath);
+            //string fileName = Path.GetFileNameWithoutExtension(filePath);
+            //Console.WriteLine("Tamaño: {0}", dataFile.Length);
             //int offset = 0;
             /*
             var call = client.SendMedia();
@@ -88,37 +88,39 @@ namespace ClienteGrpc
             Ruta route = new Ruta();
             route.Ruta_ = filePath;
             Console.WriteLine("Enviando ruta...");
-            var call = client.GetSizeAsync(route);
+
+            var call = client.FileExistAsync(route);
             Console.WriteLine("Esperando respuesta...");
             var response = await call.ResponseAsync;
             Console.WriteLine("Respuesta recibida.");
-            int size = response.Size;
+            Console.WriteLine("Existe: {0}, alpha: {1} ", response.Response, response.StringResponse);
+            //int size = response.Size;
             int chunkSize = 4096;
-            int iterations = (int)Math.Ceiling((double)size / chunkSize);
+            //int iterations = (int)Math.Ceiling((double)size / chunkSize);
             //double cociente = size / 4096;
             //var nIteraciones = Math.Ceiling(cociente);
-            Console.WriteLine("Tamaño: {0}", size);
+            //Console.WriteLine("Tamaño: {0}", size);
 
-            using(var fileStream = File.OpenWrite(filePathClient))
-            {
-                for (int i = 0; i < iterations; i++)
-                {
+            //using(var fileStream = File.OpenWrite(filePathClient))
+            //{
+            //    for (int i = 0; i < iterations; i++)
+            //    {
 
-                    var chunck = new ChunckInformation
-                    {
-                        Route = filePath,
-                        ChunckPosition = i * chunkSize
-                    };
-                    var call2 = client.GetMediaAsync(chunck);
-                    var response2 = await call2.ResponseAsync;
-                    string base64 = response2.DataB64;
-                    byte[] data = Convert.FromBase64String(base64);
-                    await fileStream.WriteAsync(data, 0, data.Length);
+            //        var chunck = new ChunckInformation
+            //        {
+            //            Route = filePath,
+            //            ChunckPosition = i * chunkSize
+            //        };
+            //        var call2 = client.GetMediaAsync(chunck);
+            //        var response2 = await call2.ResponseAsync;
+            //        string base64 = response2.DataB64;
+            //        byte[] data = Convert.FromBase64String(base64);
+            //        await fileStream.WriteAsync(data, 0, data.Length);
 
-                    Console.WriteLine($"Procesando... ({i + 1}/{iterations})");
-                }
-                Console.WriteLine("El archivo se ha transmitido con éxito.");
-            }
+            //        Console.WriteLine($"Procesando... ({i + 1}/{iterations})");
+            //    }
+            //    Console.WriteLine("El archivo se ha transmitido con éxito.");
+            //}
 
 
             //int indice = 0;

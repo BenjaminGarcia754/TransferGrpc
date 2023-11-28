@@ -2,6 +2,7 @@
 using Grpc.Core;
 using System;
 using System.Buffers.Text;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using TransferGrpc;
 using TransferGrpc.Protos;
@@ -11,11 +12,12 @@ namespace TransferGrpc.Services
 {
     public class MediaService : Media.MediaBase
     {
+        public readonly string baseFilePath = "/Media/Desarrollo/";
         //Recibir archivos desde el cliente
         public override async Task<MessageResponse> TransferMedia(MediaRequest request, ServerCallContext context)
         {
             MessageResponse response = new MessageResponse();
-            string filePath = "rutaBase/" + request.Ruta;
+            string filePath = baseFilePath + request.Ruta;
             byte[] buffer = Convert.FromBase64String(request.DataB64);
             string nombre = request.Name;
             try
@@ -25,7 +27,7 @@ namespace TransferGrpc.Services
                     await fs.WriteAsync(buffer, 0, buffer.Length);
                 }
                 
-                if (request.Size == Utilidades.CalcularTamanio(request.Ruta))
+                if (request.Size == Utilidades.CalcularTamanio(filePath))
                 {
                     response.FinalPart = true;
                     response.StringResponse = "El archivo se transfirio y se registro con exito";
@@ -50,12 +52,13 @@ namespace TransferGrpc.Services
         //Eliminar archivo
         public override async Task<MessageResponse> EliminateMedia(MediaEliminated request, ServerCallContext context)
         {
+            string filePath = baseFilePath + request.Route;
             MessageResponse responce = new MessageResponse();
-            if (File.Exists(request.Route))
+            if (File.Exists(filePath))
             {
                 try
                 {
-                    File.Delete(request.Route);
+                    File.Delete(filePath);
                     responce.Response = true;
                     responce.StringResponse = "El archivo se elimino con exito";
                 }
@@ -77,10 +80,11 @@ namespace TransferGrpc.Services
         //Comprobar que exista un archivo
         public override async Task<RutaResponse> FileExist(Ruta request, ServerCallContext context)
         {
+            string filePath = baseFilePath + request.Ruta_;
             RutaResponse responce = new RutaResponse();
-            if (File.Exists(request.Ruta_))
+            if (File.Exists(filePath))
             {
-                byte[] dataFile = File.ReadAllBytes(request.Ruta_);
+                byte[] dataFile = File.ReadAllBytes(filePath);
                 responce.TamanioFile = dataFile.Length;
                 responce.StringResponse = "El archivo Existe";
                 responce.Response = true;
@@ -108,8 +112,8 @@ namespace TransferGrpc.Services
             const int chunkSize = 4096;
             byte[] tempMediaBytes = new byte[chunkSize];
             int bytesRead;
-
-            using (FileStream fileStream = File.OpenRead(request.Route))
+            string filePath = baseFilePath + request.Route;
+            using (FileStream fileStream = File.OpenRead(filePath))
             {
                 fileStream.Position = request.ChunckPosition;
 
@@ -141,11 +145,12 @@ namespace TransferGrpc.Services
         //Obtener el tamaño de un archivo
         public override async Task<ChunckSize> GetSize(Ruta request, ServerCallContext context)
         {
+            string filePath = baseFilePath + request.Ruta_;
             ChunckSize chunckSize = new ChunckSize();
             Console.WriteLine("En el servidor Get Size");
             try
             {
-                byte[] mediaArray = await File.ReadAllBytesAsync(request.Ruta_);
+                byte[] mediaArray = await File.ReadAllBytesAsync(filePath);
                 int result = mediaArray.Length;
                 chunckSize.Size = result;
             }
