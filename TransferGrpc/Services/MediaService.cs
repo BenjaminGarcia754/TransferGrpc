@@ -49,6 +49,36 @@ namespace TransferGrpc.Services
             return response;
         }
 
+        //Crear carpeta donde se va a guardar el archivo
+        public override Task<RutaResponse> CreatePath(Ruta request, ServerCallContext context)
+        {
+
+            RutaResponse rutaResponse = new RutaResponse();
+            try 
+            {
+                if (Directory.Exists(request.Ruta_))
+                {
+                    rutaResponse.Response = false;
+                    rutaResponse.StringResponse = "La ruta ya existe";
+                }else
+                {
+                    Directory.CreateDirectory(request.Ruta_);
+                    rutaResponse.Response = true;
+                    rutaResponse.StringResponse = "La ruta se creo con exito";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                rutaResponse.Response = false;
+                rutaResponse.StringResponse = "La ruta no pudo ser creada";
+            }
+
+            return Task.FromResult(rutaResponse);
+            
+        }
+
         //Eliminar archivo
         public override async Task<MessageResponse> EliminateMedia(MediaEliminated request, ServerCallContext context)
         {

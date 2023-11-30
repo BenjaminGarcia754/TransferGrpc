@@ -73,10 +73,13 @@ message ChunckSize{
     int32 size = 1;
 };
 
+
+
 service Media {
     rpc TransferMedia (MediaRequest) returns (MessageResponse);
     rpc EliminateMedia (MediaEliminated) returns (MessageResponse);
     rpc FileExist (Ruta) returns (RutaResponse);
+    rpc CreatePath(Ruta) returns (RutaResponse);
     rpc RecuperarConexion (MediaRecovery) returns (MessageResponse);
     // Nuevo servicio SendMedia para transmitir partes del archivo de video.
     rpc SendMedia (stream MediaSend) returns (MediaResponse);
