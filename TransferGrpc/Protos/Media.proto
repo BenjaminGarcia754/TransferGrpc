@@ -20,8 +20,9 @@ message MediaRequest {
 }
 message MessageResponse {
     bool response = 1;
-    string stringResponse = 2;
-    bool finalPart = 3;
+    string rutaAws = 2;
+    string stringResponse = 3;
+    bool finalPart = 4;
 }
 
 message MediaEliminated {
