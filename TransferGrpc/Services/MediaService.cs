@@ -31,23 +31,24 @@ namespace TransferGrpc.Services
                 {
                     response.FinalPart = true;
                     response.StringResponse = "El archivo se transfirio y se registro con exito";
-                    var aws = await Utilidades.SubirAWS(filePath);
-                    if (aws)
+                    Respuesta aws = await Utilidades.SubirAWS(filePath);
+                    if (aws.Exito)
                     {
-                        response.RutaAws = "https://transfer-grpc.s3-us-west-2.amazonaws.com/" + nombre;
-                        response.StringResponse = "El archivo se transfirio y se registro con exito en AWS";
+                        response.RutaAws = aws.Url;
+                        response.StringResponse = aws.Mensaje;
                     }
                     else
                     {
-                        response.StringResponse = "El archivo se transfirio y se registro con exito pero no se pudo subir a AWS";
+                        response.StringResponse = aws.Mensaje;
                     }
                 }
                 else
                 {
+                    response.FinalPart = false;
                     response.StringResponse = "Procesando el archivo...";
                 }
                 response.Response = true;
-                response.FinalPart = false;
+                
             }
             catch (Exception ex)
             {

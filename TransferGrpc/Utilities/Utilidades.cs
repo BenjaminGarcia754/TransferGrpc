@@ -1,5 +1,6 @@
 ﻿using Amazon;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using System;
 
@@ -13,13 +14,13 @@ namespace TransferGrpc.Utilities
             return archivo.Length;
         }
 
-        public static async Task<bool> SubirAWS(string filePath)
+        public static async Task<Respuesta> SubirAWS(string filePath)
         {
             string accessKey = "AKIATJRSQYEU6O5BL2WF";
             string secretKey = "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";
             string bucketName = "studyandroid";
             string keyName = "pruebac#";
-
+            Respuesta respuesta = new Respuesta();
             try
             {
                 var credentials = new Amazon.Runtime.BasicAWSCredentials(accessKey, secretKey);
@@ -31,18 +32,27 @@ namespace TransferGrpc.Utilities
 
                 await transferUtility.UploadAsync(filePath, bucketName, keyName);
 
-                Console.WriteLine("Archivo subido exitosamente a S3.");
+                var url = s3Client.GetPreSignedURL(new Amazon.S3.Model.GetPreSignedUrlRequest
+                {
+                    BucketName = bucketName,
+                    Key = keyName,
+                    Expires = DateTime.Now.AddMinutes(5)
+                });
+                respuesta.Exito = true;
+                respuesta.Mensaje = "Archivo subido exitosamente a S3.";
+                respuesta.Url = url;
             }
             catch (AmazonS3Exception ex)
             {
-                Console.WriteLine($"Error al subir el archivo a S3: {ex.Message}");
-            }
+                respuesta.Exito = false;
+                respuesta.Mensaje = $"Error al subir el archivo a S3: {ex.Message}";}
             catch (Exception ex)
             {
-                Console.WriteLine($"Error inesperado: {ex.Message}");
+                respuesta.Exito = false;
+                respuesta.Mensaje = $"Error inesperado: {ex.Message}";
             }
 
-            return false;
+            return respuesta;
         }
     }
 }
