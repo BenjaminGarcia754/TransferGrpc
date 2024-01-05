@@ -3,6 +3,8 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using System;
+using System.Web;
+using static System.Net.WebRequestMethods;
 
 namespace TransferGrpc.Utilities
 {
@@ -10,7 +12,7 @@ namespace TransferGrpc.Utilities
     {
         public static double CalcularTamanio(string ruta)
         {
-            byte[] archivo = File.ReadAllBytes(ruta);
+            byte[] archivo = System.IO.File.ReadAllBytes(ruta);
             return archivo.Length;
         }
 
@@ -19,25 +21,27 @@ namespace TransferGrpc.Utilities
             string accessKey = "AKIATJRSQYEU6O5BL2WF";
             string secretKey = "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";
             string bucketName = "studyandroid";
-            string keyName = "pruebac#";
+            string name = Path.GetFileName(filePath);
+            string keyName = name;
             Respuesta respuesta = new Respuesta();
             try
             {
                 var credentials = new Amazon.Runtime.BasicAWSCredentials(accessKey, secretKey);
-                var region = Amazon.RegionEndpoint.USEast2; // Cambia a tu región
-
+                var region = Amazon.RegionEndpoint.USEast2;
                 var s3Client = new AmazonS3Client(credentials, region);
 
                 var transferUtility = new TransferUtility(s3Client);
 
-                await transferUtility.UploadAsync(filePath, bucketName, keyName);
-
-                var url = s3Client.GetPreSignedURL(new Amazon.S3.Model.GetPreSignedUrlRequest
+                var uploadRequest = new TransferUtilityUploadRequest
                 {
                     BucketName = bucketName,
+                    FilePath = filePath,
                     Key = keyName,
-                    Expires = DateTime.Now.AddMinutes(5)
-                });
+                    CannedACL = S3CannedACL.PublicRead };
+
+                await transferUtility.UploadAsync(uploadRequest);
+
+                string url = "https://studyandroid.s3.us-east-2.amazonaws.com/" + HttpUtility.UrlEncode(keyName);
                 respuesta.Exito = true;
                 respuesta.Mensaje = "Archivo subido exitosamente a S3.";
                 respuesta.Url = url;

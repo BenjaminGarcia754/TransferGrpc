@@ -17,7 +17,7 @@ namespace TransferGrpc.Services
         public override async Task<MessageResponse> TransferMedia(MediaRequest request, ServerCallContext context)
         {
             MessageResponse response = new MessageResponse();
-            string filePath = baseFilePath + request.Ruta;
+            string filePath = request.Ruta;
             byte[] buffer = Convert.FromBase64String(request.DataB64);
             string nombre = request.Name;
             try
@@ -27,13 +27,17 @@ namespace TransferGrpc.Services
                     await fs.WriteAsync(buffer, 0, buffer.Length);
                 }
                 
-                if (request.Size == Utilidades.CalcularTamanio(filePath))
+                if (request.FinalPart)
                 {
+                    Console.WriteLine("El archivo se ha transmitido con éxito.");
                     response.FinalPart = true;
                     response.StringResponse = "El archivo se transfirio y se registro con exito";
                     Respuesta aws = await Utilidades.SubirAWS(filePath);
                     if (aws.Exito)
                     {
+                        Console.WriteLine("El archivo se ha subido a AWS con éxito.");
+                        Console.WriteLine("Ruta: {0}", aws.Url);
+                        Console.WriteLine("Mensaje: {0}", aws.Mensaje);
                         response.RutaAws = aws.Url;
                         response.StringResponse = aws.Mensaje;
                     }
@@ -42,11 +46,8 @@ namespace TransferGrpc.Services
                         response.StringResponse = aws.Mensaje;
                     }
                 }
-                else
-                {
-                    response.FinalPart = false;
-                    response.StringResponse = "Procesando el archivo...";
-                }
+                
+                response.StringResponse = "Procesando el archivo...";    
                 response.Response = true;
                 
             }
@@ -93,7 +94,7 @@ namespace TransferGrpc.Services
         //Eliminar archivo
         public override async Task<MessageResponse> EliminateMedia(MediaEliminated request, ServerCallContext context)
         {
-            string filePath = baseFilePath + request.Route;
+            string filePath = request.Route;
             MessageResponse responce = new MessageResponse();
             if (File.Exists(filePath))
             {
@@ -121,7 +122,7 @@ namespace TransferGrpc.Services
         //Comprobar que exista un archivo
         public override async Task<RutaResponse> FileExist(Ruta request, ServerCallContext context)
         {
-            string filePath = baseFilePath + request.Ruta_;
+            string filePath = request.Ruta_;
             RutaResponse responce = new RutaResponse();
             if (File.Exists(filePath))
             {
@@ -153,7 +154,7 @@ namespace TransferGrpc.Services
             const int chunkSize = 4096;
             byte[] tempMediaBytes = new byte[chunkSize];
             int bytesRead;
-            string filePath = baseFilePath + request.Route;
+            string filePath = request.Route;
             using (FileStream fileStream = File.OpenRead(filePath))
             {
                 fileStream.Position = request.ChunckPosition;
@@ -186,17 +187,19 @@ namespace TransferGrpc.Services
         //Obtener el tamaño de un archivo
         public override async Task<ChunckSize> GetSize(Ruta request, ServerCallContext context)
         {
-            string filePath = baseFilePath + request.Ruta_;
+            string filePath = request.Ruta_;
             ChunckSize chunckSize = new ChunckSize();
             Console.WriteLine("En el servidor Get Size");
             try
             {
                 byte[] mediaArray = await File.ReadAllBytesAsync(filePath);
                 int result = mediaArray.Length;
+                Console.WriteLine("El tamaño del archivo es: {0}", result);
                 chunckSize.Size = result;
             }
             catch (Exception)
             {
+                Console.WriteLine("Error al obtener el tamaño del archivo");
                 chunckSize.Size = 0;
             }
             

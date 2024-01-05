@@ -17,6 +17,7 @@ message MediaRequest {
     string valoracion = 11;
     int32 posicion = 12;
     bool finalPart = 13;
+    string hash = 14;
 }
 message MessageResponse {
     bool response = 1;
