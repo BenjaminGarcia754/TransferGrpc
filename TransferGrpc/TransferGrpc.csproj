@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Conexion\**" />
+    <Content Remove="Conexion\**" />
+    <EmbeddedResource Remove="Conexion\**" />
+    <None Remove="Conexion\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Protobuf Include="Protos\greet.proto" GrpcServices="Server" />
 	<Protobuf Include="Protos\Media.proto" GrpcServices="Server" />
   </ItemGroup>
@@ -28,10 +35,6 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql.Design" Version="1.1.2" />
     <PackageReference Include="System.Threading.Tasks" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Conexion\" />
   </ItemGroup>
 
 </Project>
