@@ -18,9 +18,9 @@ namespace TransferGrpc.Utilities
 
         public static async Task<Respuesta> SubirAWS(string filePath)
         {
-            string accessKey = "AKIATJRSQYEU6O5BL2WF";
-            string secretKey = "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";
-            string bucketName = "studyandroid";
+            string accessKey = "";
+            string secretKey = "";
+            string bucketName = "";
             string name = Path.GetFileName(filePath);
             string keyName = name;
             Respuesta respuesta = new Respuesta();
